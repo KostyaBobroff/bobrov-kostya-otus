@@ -1,0 +1,15 @@
+./tree ./mock -d 2
+
+./mock
+├──cluster
+│ └──index.js
+├──domain
+│ ├──error.js
+│ ├──flow.js
+│ └──run.js
+├──errors
+│ ├──counter.js
+│ └──try-catch.js
+├──index.js
+└──worker
+4 directories, 7 files

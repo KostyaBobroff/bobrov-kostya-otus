@@ -1,0 +1,62 @@
+#!/usr/bin/env node
+import process from "node:process";
+// import fs from "node:fs";
+import fsPromise from "node:fs/promises";
+
+const LAST_SYMBOL = "└──";
+const SPACE_SYMBOL = "│";
+const ELEMENT_SYMBOL = "├──";
+
+/**
+ * Функция подсчета отступов с учетом уровня + добавление символа "│" если это не нулевой уровень
+ * @param level
+ * @returns
+ */
+const drawSpaces = (level) => {
+  let result = "";
+  for (let i = 0; i < level - 1; i++) {
+    result += " ";
+  }
+  return result.length ? SPACE_SYMBOL + result : result;
+};
+
+const tree = async () => {
+  const dir = process.argv[2];
+  const depth = process.argv[3] === "-d" ? Number(process.argv[4]) || 0 : 0;
+  let dirCount = 0;
+  let fileCount = 0;
+
+  const readDir = async (currDir, path, index, length = 0, level = 0) => {
+    const stat = await fsPromise.lstat(path);
+    if (level > depth) {
+      return;
+    }
+    if (level === 0) {
+      console.log(currDir);
+    } else {
+      let curSymbol = index !== length - 1 ? ELEMENT_SYMBOL : LAST_SYMBOL;
+      const str = drawSpaces(level) + curSymbol + currDir;
+      console.log(str);
+    }
+
+    if (stat.isFile()) {
+      fileCount++;
+      return;
+    }
+
+    if (level > 0) {
+      dirCount++;
+    }
+
+    const newDirs = await fsPromise.readdir(path);
+    for (let i = 0; i < newDirs.length; i++) {
+      const d = newDirs[i];
+      await readDir(d, `${path}/${d}`, i, newDirs.length, level + 1);
+    }
+  };
+
+  await readDir(dir, dir, 0);
+  console.log(`${dirCount} directories, ${fileCount} files`);
+};
+
+tree();
