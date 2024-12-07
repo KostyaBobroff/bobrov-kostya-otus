@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+enum Role {
+  USER
+  ADMIN
+  INTERVIEWER
+}
+
+enum Level {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model User {
+  id          Int              @id @default(autoincrement())
+  name        String           @unique
+  email       String           @unique
+  createdAt   DateTime         @default(now()) @map("created_at")
+  rating      Float            @default(0)
+  role        Role             @default(USER)
+  comments    Comment[]
+  assessments TaskAssessment[]
+  password    String
+
+  @@map("users")
+}
+
+model Tag {
+  id    Int    @id @default(autoincrement())
+  tag   String
+  tasks Task[]
+
+  @@map("tags")
+}
+
+model Comment {
+  id      Int      @id @default(autoincrement())
+  content String
+  files   String[] @default([])
+  taskId  Int      @map("task_id")
+  task    Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId  Int      @map("user_id")
+  user    User     @relation(fields: [userId], references: [id])
+
+  @@map("comments")
+}
+
+model TaskAssessment {
+  id         Int   @id @default(autoincrement())
+  assessment Float
+  taskId     Int   @map("task_id")
+  task       Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId     Int   @map("user_id")
+  user       User  @relation(fields: [userId], references: [id])
+
+  @@map("tasks_assessments")
+}
+
+model Task {
+  id          Int              @id @default(autoincrement())
+  title       String
+  description String
+  input       String
+  output      String
+  level       Level            @default(EASY)
+  links       String[]         @default([])
+  files       String[]         @default([])
+  tags        Tag[]
+  comments    Comment[]
+  assessments TaskAssessment[]
+
+  @@map("tasks")
+}
+
+model Session {
+  id        String   @id
+  sid       String   @unique
+  data      String
+  expiresAt   DateTime
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
